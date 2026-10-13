@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Company Directory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container-xl d-flex flex-wrap align-items-center gap-3 py-3">
+    <a class="brand" href="#" id="brand">Company Directory</a>
+    <nav class="nav-tabs-lite" aria-label="Sections">
+      <button type="button" class="tab active" data-view="directory">Directory</button>
+      <button type="button" class="tab" data-view="departments">Departments</button>
+      <button type="button" class="tab" data-view="locations">Locations</button>
+    </nav>
+  </div>
+</header>
+
+<main class="container-xl py-4">
+
+  <!-- ============ SCREEN 1 / 4: DIRECTORY (desktop + mobile) ============ -->
+  <section id="view-directory" class="view">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+      <div>
+        <h1 class="page-title mb-1">Find a colleague</h1>
+        <p class="text-muted mb-0" id="resultInfo" aria-live="polite">Loading employees…</p>
+      </div>
+      <button type="button" class="btn btn-brand" id="addBtn">Add employee</button>
+    </div>
+
+    <button class="btn btn-outline-secondary d-lg-none w-100 mb-3" type="button" data-bs-toggle="collapse"
+            data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel" id="filterToggle">
+      Search and filters
+    </button>
+
+    <div class="row g-4">
+      <aside class="col-lg-3">
+        <div class="collapse d-lg-block" id="filterPanel">
+          <form class="filters" id="filterForm" role="search" onsubmit="return false">
+            <div class="mb-3">
+              <label class="form-label" for="search">Search by name</label>
+              <input type="search" class="form-control" id="search" placeholder="e.g. Olivia Smith" autocomplete="off">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="fDepartment">Department</label>
+              <select class="form-select" id="fDepartment"><option value="">All departments</option></select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="fTitle">Job title</label>
+              <select class="form-select" id="fTitle"><option value="">All job titles</option></select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="fLocation">Location</label>
+              <select class="form-select" id="fLocation"><option value="">All locations</option></select>
+            </div>
+            <button type="button" class="btn btn-outline-secondary w-100" id="clearBtn">Clear filters</button>
+          </form>
+        </div>
+      </aside>
+
+      <div class="col-lg-9">
+        <div id="list" class="emp-list" aria-busy="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DEPARTMENTS ============ -->
+  <section id="view-departments" class="view d-none">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+      <div>
+        <h1 class="page-title mb-1">Departments</h1>
+        <p class="text-muted mb-0">Choose a department to see who works in it.</p>
+      </div>
+      <button type="button" class="btn btn-brand" data-org-create="department">Add department</button>
+    </div>
+    <div class="row g-3" id="departmentGrid"></div>
+  </section>
+
+  <!-- ============ LOCATIONS ============ -->
+  <section id="view-locations" class="view d-none">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+      <div>
+        <h1 class="page-title mb-1">Office locations</h1>
+        <p class="text-muted mb-0">Choose an office to see who works there.</p>
+      </div>
+      <button type="button" class="btn btn-brand" data-org-create="location">Add location</button>
+    </div>
+    <div class="row g-3" id="locationGrid"></div>
+  </section>
+</main>
+
+<!-- ============ SCREEN 2: EMPLOYEE PROFILE ============ -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="profileTitle">Employee profile</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="profileBody"></div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-danger" id="profileDelete">Delete</button>
+        <button type="button" class="btn btn-brand" id="profileEdit">Edit details</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 3: ADD / EDIT FORM ============ -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formTitle" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+    <form class="modal-content" id="employeeForm" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="formTitle">Add employee</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" id="formAlert" role="alert"></div>
+        <input type="hidden" id="empId">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="firstName">First name</label>
+            <input class="form-control" id="firstName" maxlength="50" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="lastName">Last name</label>
+            <input class="form-control" id="lastName" maxlength="50" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="jobTitle">Job title</label>
+            <input class="form-control" id="jobTitle" maxlength="100" list="titleOptions" required>
+            <datalist id="titleOptions"></datalist>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-control" id="email" maxlength="120" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="phone">Phone</label>
+            <input type="tel" class="form-control" id="phone" maxlength="30" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="departmentID">Department</label>
+            <select class="form-select" id="departmentID" required><option value="">Choose a department</option></select>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="locationShow">Office location</label>
+            <input class="form-control" id="locationShow" readonly tabindex="-1" aria-describedby="locHelp">
+            <div class="form-text" id="locHelp">Set by the department. Pick a department in another office to move this person.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="managerID">Manager <span class="text-muted fw-normal">(optional)</span></label>
+            <select class="form-select" id="managerID"><option value="">No manager</option></select>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-brand" id="saveBtn">Save employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DEPARTMENT / LOCATION FORM ============ -->
+<div class="modal fade" id="orgFormModal" tabindex="-1" aria-labelledby="orgFormTitle" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+    <form class="modal-content" id="orgForm" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="orgFormTitle">Add department</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" id="orgFormAlert" role="alert"></div>
+        <input type="hidden" id="orgId">
+        <div class="mb-3">
+          <label class="form-label" id="orgNameLabel" for="orgName">Department name</label>
+          <input class="form-control" id="orgName" maxlength="80" required>
+          <div class="invalid-feedback"></div>
+        </div>
+        <div id="orgLocationField">
+          <label class="form-label" for="orgLocationID">Office location</label>
+          <select class="form-select" id="orgLocationID" required><option value="">Choose a location</option></select>
+          <div class="invalid-feedback"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-brand" id="orgSaveBtn">Save department</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DELETE CONFIRMATION ============ -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="deleteTitle">Delete this employee?</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0" id="deleteText"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep employee</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Delete employee</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toasts" aria-live="polite"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
