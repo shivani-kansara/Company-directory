@@ -8,7 +8,7 @@ declare(strict_types=1);
 const DB_HOST = 'localhost';
 const DB_NAME = 'company_directory';
 const DB_USER = 'root';
-const DB_PASS = '';
+const DB_PASS = 'sunshine';
 const DB_PORT = 3306;
 
 function db(): PDO
